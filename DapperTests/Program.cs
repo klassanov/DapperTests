@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using Dapper;
 using DapperTests.DbModels;
@@ -12,9 +13,10 @@ namespace DapperTests
         static string ConnectionString = "Data Source = (localdb)\\MSSQLLocalDB; Initial Catalog = Spark; Integrated Security = True;";//  Connect Timeout = 30; Encrypt = False; Trust Server Certificate=False; Application Intent = ReadWrite; Multi Subnet Failover=False
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            //Console.WriteLine("Hello World!");
             //UsersQuery();
             //UserRolesQuery();
+            UserRolesPagesQuery();
 
             //Tests.GroupStundentsByBranch();
             //Tests.GroupStundentsByGenderWithOrderBy();
@@ -74,6 +76,16 @@ namespace DapperTests
 
                     Console.WriteLine();
                 }
+            }
+        }
+
+        private static void UserRolesPagesQuery()
+        {
+            var procedure = "GetRolesPagesByUserId";
+            var values = new { userId = 1 };
+            using (var connection = new SqlConnection(ConnectionString))
+            { 
+                var results = connection.Query(procedure, values, commandType: CommandType.StoredProcedure).ToList();
             }
         }
     }
