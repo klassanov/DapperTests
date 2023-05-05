@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using Dapper;
@@ -82,11 +83,36 @@ namespace DapperTests
         private static void UserRolesPagesQuery()
         {
             var procedure = "GetRolesPagesByUserId";
-            var values = new { userId = 1 };
+            var parameters = new { userId = 1 };
+            IEnumerable<User> results = null;
             using (var connection = new SqlConnection(ConnectionString))
-            { 
-                var results = connection.Query(procedure, values, commandType: CommandType.StoredProcedure).ToList();
+            {
+                results = connection.Query<User, Role, Page, User>(procedure, (user, role, page) =>
+                {
+                    role.Pages.Add(page);
+                    user.Roles.Add(role);
+                    return user;
+                },
+                parameters,
+                commandType: CommandType.StoredProcedure);
             }
+
+            var user = results.GroupBy(x => x.Id)
+                              .Select(userGroup =>
+                              {
+                                   var user = userGroup.First();
+                                   var roles = userGroup.Select(user => user.Roles.Single()).ToList();
+                                   user.Roles = roles.GroupBy(x => x.Id)
+                                                     .Select(rolesGroup =>
+                                                     {
+                                                         var role = rolesGroup.First();
+                                                         role.Pages = rolesGroup.Select(role => role.Pages.Single()).ToList();
+                                                         return role;
+                                                     })
+                                                     .ToList();
+
+                                   return user;
+                              });
         }
     }
 }
