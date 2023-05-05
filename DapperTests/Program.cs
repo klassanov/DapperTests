@@ -112,7 +112,8 @@ namespace DapperTests
                                                      .ToList();
 
                                    return user;
-                              });
+                              })
+                              .Single();
         }
     }
 }
